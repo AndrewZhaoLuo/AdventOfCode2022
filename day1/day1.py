@@ -1,5 +1,4 @@
 import numpy as np
-import numpy.ma as ma
 
 TEST_FILE = "day1/test_input.txt"
 INPUT_FILE = "day1/input.txt"
