@@ -21,7 +21,6 @@ if __name__ == "__main__":
     # part 1
     encoding = read_stuff(INPUT_FILE)
     
-    # sort numbers so earlier left bound elf is first 
     part1_encoding = np.reshape(encoding, [-1, 2, 2])
     ss = part1_encoding[:, 0, :] - part1_encoding[:, 1, :] 
     ss = np.logical_or(
