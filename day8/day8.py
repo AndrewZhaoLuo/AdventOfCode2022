@@ -69,7 +69,6 @@ if __name__ == "__main__":
     print(visible.flatten().sum())
 
     # part 2
-    # helpful to have the constant value be large number
     tree_grid_p2 = tree_grid.copy()
     up_scores = get_scenic_score_direction(tree_grid_p2, 0)
     down_scores = get_scenic_score_direction(tree_grid_p2[::-1, :], 0)[::-1, :]
