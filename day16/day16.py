@@ -161,63 +161,56 @@ def p2_search(pathing_dict, valve_flow_data):
     return p2_recursive(26, 'AA', 'AA', 0, 0, 0)
 
 def p2_search_alternate(pathing_dict, valve_flow_data):
+    open_valves = set()
+    cache_end_states = dict()
+    def p1_recursive(time_left, location, cur_leaked, allowed_valves) -> int:
+        if time_left < 0:
+            # illegal
+            return 0 
 
-    def wrapped_call(time_left, location, cur_leaked, allowed_valves):
-        open_valves = set()
-        cache = dict()
-        def p1_recursive(time_left, location, cur_leaked, allowed_valves) -> int:
-            cached_key = (
-                time_left, 
-                location, 
-                cur_leaked,
-                tuple(sorted(allowed_valves)),
-                tuple(sorted((open_valves))),
-            )
-            if cached_key in cache: 
-                return cache[cached_key]
-            if time_left < 0:
-                # illegal
-                return 0 
+        cached_key = (
+            tuple(sorted(open_valves)),
+        )
 
-            # just wait case
-            best = cur_leaked
+        # just wait case
+        best = cur_leaked
+        cache_end_states[cached_key] = max(cache_end_states.get(cached_key, 0), cur_leaked)
 
-            # move to unopened valve and open the valve
-            for neighbor, time_to_reach in pathing_dict[location].items():
-                if neighbor not in allowed_valves:
-                    continue
-                if neighbor in open_valves or valve_flow_data.get(neighbor, 0) == 0:
-                    continue
-                time_to_accomplish = time_to_reach + 1
-                future_time_left = time_left - time_to_accomplish
-                future_leaked = cur_leaked + valve_flow_data.get(neighbor, 0) * future_time_left
+        # move to unopened valve and open the valve
+        for neighbor, time_to_reach in pathing_dict[location].items():
+            if neighbor not in allowed_valves:
+                continue
+            if neighbor in open_valves or valve_flow_data.get(neighbor, 0) == 0:
+                continue
+            time_to_accomplish = time_to_reach + 1
+            future_time_left = time_left - time_to_accomplish
+            future_leaked = cur_leaked + valve_flow_data.get(neighbor, 0) * future_time_left
 
-                open_valves.add(neighbor)
-                best = max(best, p1_recursive(future_time_left, neighbor, future_leaked, allowed_valves))
-                open_valves.remove(neighbor)
+            open_valves.add(neighbor)
+            best_open_valve = p1_recursive(future_time_left, neighbor, future_leaked, allowed_valves)
+            best = max(best, best_open_valve)
+            open_valves.remove(neighbor)
 
-            cache[cached_key] = best
-            return best 
-        return p1_recursive(time_left, location, cur_leaked, allowed_valves)
+        return best 
 
-    import itertools, time
-    valves_of_interest = set(valve_flow_data.keys())
-    max_values = 0
-    for num_left in range(len(valves_of_interest) // 2 + 1):
-        print(num_left, '/', len(valves_of_interest) // 2 + 1)
-        start = time.time()
-        for left_valves in itertools.permutations(valves_of_interest, num_left):
-            left_valves = set(left_valves)
-            right_valves = valves_of_interest - left_valves
-            # print(left_valves, right_valves)
-            max_values = max(
-                max_values, 
-                wrapped_call(26, 'AA', 0, left_valves) + wrapped_call(26, 'AA', 0, right_valves)
-            )
-        end = time.time()
-        print('\tV:', max_values, end - start, '(s)')
+    # fill cache
+    p1_recursive(26, "AA", 0, valve_flow_data.keys())
 
-    return max_values
+    max_value = 0
+    flattened_cache_end_states = list(cache_end_states.items())
+    for i in range(len(cache_end_states)):
+        for j in range(i + 1, len(cache_end_states)):
+            left_key, left_val = flattened_cache_end_states[i]
+            right_key, right_val = flattened_cache_end_states[j] 
+
+            left_key = left_key[0]
+            right_key = right_key[0]
+
+            if len(set(left_key).intersection(set(right_key))) == 0:
+                if left_val + right_val > max_value:
+                    max_value = left_val + right_val
+
+    return max_value
 
 if __name__ == "__main__":
     # part 1
